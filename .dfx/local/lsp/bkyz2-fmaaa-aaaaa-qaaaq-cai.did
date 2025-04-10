@@ -1,0 +1,26 @@
+service : {
+  checkFileExists: (text) -> (bool);
+  deleteFile: (text) -> (bool);
+  getFileChunk: (text, nat) -> (opt blob);
+  getFileType: (text) -> (opt text);
+  getFiles: () ->
+   (vec
+     record {
+       employeeId: text;
+       fileType: text;
+       name: text;
+       owner: principal;
+       size: nat;
+     });
+  getFilesByEmployeeId: (text) ->
+   (vec
+     record {
+       employeeId: text;
+       fileType: text;
+       name: text;
+       owner: principal;
+       size: nat;
+     });
+  getTotalChunks: (text) -> (nat);
+  uploadFileChunk: (text, blob, nat, text, text) -> ();
+}

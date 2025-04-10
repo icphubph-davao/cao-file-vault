@@ -17,6 +17,9 @@ function App() {
   const [files, setFiles] = useState([]);
   const [errorMessage, setErrorMessage] = useState();
   const [fileTransferProgress, setFileTransferProgress] = useState();
+  const [principalId, setPrincipalId] = useState("");
+  const [employeeFilter, setEmployeeFilter] = useState("");
+  const [filteredFiles, setFilteredFiles] = useState([]);
 
   useEffect(() => {
     updateActor();
@@ -28,6 +31,15 @@ function App() {
       loadFiles();
     }
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (employeeFilter.trim() === "") {
+      setFilteredFiles(files);
+    } else {
+      const filtered = files.filter(file => file.employeeId.toLowerCase().includes(employeeFilter.toLowerCase()));
+      setFilteredFiles(filtered);
+    }
+  }, [employeeFilter, files]);
 
   async function updateActor() {
     const authClient = await AuthClient.create();
@@ -42,7 +54,13 @@ function App() {
     setActor(actor);
     setAuthClient(authClient);
     setIsAuthenticated(isAuthenticated);
+    setPrincipalId(identity.getPrincipal().toString());
   }
+
+  const copyPrincipalId = () => {
+    navigator.clipboard.writeText(principalId);
+    alert('Principal ID copied to clipboard!');
+  };
 
   async function login() {
     await authClient.login({
@@ -60,6 +78,7 @@ function App() {
     try {
       const fileList = await actor.getFiles();
       setFiles(fileList);
+      setFilteredFiles(fileList);
     } catch (error) {
       console.error('Failed to load files:', error);
       setErrorMessage('Failed to load files. Please try again.');
@@ -72,6 +91,13 @@ function App() {
 
     if (!file) {
       setErrorMessage('Please select a file to upload.');
+      return;
+    }
+
+    // Prompt for employee ID
+    const employeeId = prompt('Please enter the Employee ID for this file:');
+    if (!employeeId) {
+      setErrorMessage('Employee ID is required.');
       return;
     }
 
@@ -97,7 +123,7 @@ function App() {
           const end = Math.min(start + chunkSize, content.length);
           const chunk = content.slice(start, end);
 
-          await actor.uploadFileChunk(file.name, chunk, BigInt(i), file.type);
+          await actor.uploadFileChunk(file.name, chunk, BigInt(i), file.type, employeeId);
           setFileTransferProgress((prev) => ({
             ...prev,
             progress: Math.floor(((i + 1) / totalChunks) * 100)
@@ -177,9 +203,23 @@ function App() {
         <h1 className="mb-4 text-2xl font-bold">FileVault</h1>
 
         {isAuthenticated ? (
-          <button onClick={logout} className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600">
-            Logout
-          </button>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 rounded bg-gray-100 px-3 py-1">
+                <span className="text-sm text-gray-600">Principal ID: {principalId}</span>
+                <button 
+                  onClick={copyPrincipalId}
+                  className="text-blue-500 hover:text-blue-700"
+                  title="Copy Principal ID"
+                >
+                  📋
+                </button>
+              </div>
+            </div>
+            <button onClick={logout} className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600">
+              Logout
+            </button>
+          </div>
         ) : (
           <button onClick={login} className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600">
             Login with Internet Identity
@@ -193,12 +233,21 @@ function App() {
         </div>
       ) : (
         <div>
-          <div className="mb-4">
+          <div className="mb-4 flex items-center space-x-4">
             <input
               type="file"
               onChange={handleFileUpload}
               className="block w-full text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
             />
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="Filter by Employee ID..."
+                value={employeeFilter}
+                onChange={(e) => setEmployeeFilter(e.target.value)}
+                className="w-full rounded-md border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
+              />
+            </div>
           </div>
 
           {errorMessage && (
@@ -214,13 +263,16 @@ function App() {
           )}
 
           <div className="space-y-2">
-            {files.length === 0 ? (
-              <p className="py-8 text-center text-gray-500">You have no files. Upload some!</p>
+            {filteredFiles.length === 0 ? (
+              <p className="py-8 text-center text-gray-500">
+                {employeeFilter ? 'No files found for this employee ID.' : 'No files uploaded yet.'}
+              </p>
             ) : (
-              files.map((file) => (
+              filteredFiles.map((file) => (
                 <div key={file.name} className="flex items-center justify-between rounded-lg bg-white p-3 shadow">
-                  <div className="flex items-center space-x-2">
-                    <span>{file.name}</span>
+                  <div className="flex flex-col">
+                    <span className="font-medium">{file.name}</span>
+                    <span className="text-sm text-gray-500">Employee ID: {file.employeeId}</span>
                   </div>
                   <div className="flex space-x-2">
                     <button onClick={() => handleFileDownload(file.name)} className="btn">

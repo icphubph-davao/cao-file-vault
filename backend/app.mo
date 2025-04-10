@@ -23,6 +23,8 @@ persistent actor Filevault {
     chunks : [FileChunk];
     totalSize : Nat;
     fileType : Text;
+    owner : Principal;
+    employeeId : Text;
   };
 
   // Define a data type for storing files associated with a user principal.
@@ -49,13 +51,20 @@ persistent actor Filevault {
   };
 
   // Upload a file in chunks.
-  public shared (msg) func uploadFileChunk(name : Text, chunk : Blob, index : Nat, fileType : Text) : async () {
+  public shared (msg) func uploadFileChunk(name : Text, chunk : Blob, index : Nat, fileType : Text, employeeId : Text) : async () {
     let userFiles = getUserFiles(msg.caller);
     let fileChunk = { chunk = chunk; index = index };
 
     switch (HashMap.get(userFiles, thash, name)) {
       case null {
-        let _ = HashMap.put(userFiles, thash, name, { name = name; chunks = [fileChunk]; totalSize = chunk.size(); fileType = fileType });
+        let _ = HashMap.put(userFiles, thash, name, { 
+          name = name; 
+          chunks = [fileChunk]; 
+          totalSize = chunk.size(); 
+          fileType = fileType;
+          owner = msg.caller;
+          employeeId = employeeId;
+        });
       };
       case (?existingFile) {
         let updatedChunks = Array.append(existingFile.chunks, [fileChunk]);
@@ -68,6 +77,8 @@ persistent actor Filevault {
             chunks = updatedChunks;
             totalSize = existingFile.totalSize + chunk.size();
             fileType = fileType;
+            owner = msg.caller;
+            employeeId = employeeId;
           }
         );
       };
@@ -75,19 +86,29 @@ persistent actor Filevault {
   };
 
   // Return list of files for a user.
-  public shared (msg) func getFiles() : async [{ name : Text; size : Nat; fileType : Text }] {
+  public shared (msg) func getFiles() : async [{ name : Text; size : Nat; fileType : Text; owner : Principal; employeeId : Text }] {
     Iter.toArray(
       Iter.map(
         HashMap.vals(getUserFiles(msg.caller)),
-        func(file : File) : { name : Text; size : Nat; fileType : Text } {
+        func(file : File) : { name : Text; size : Nat; fileType : Text; owner : Principal; employeeId : Text } {
           {
             name = file.name;
             size = file.totalSize;
             fileType = file.fileType;
+            owner = file.owner;
+            employeeId = file.employeeId;
           };
         }
       )
     );
+  };
+
+  // Get files by employee ID
+  public shared (msg) func getFilesByEmployeeId(employeeId : Text) : async [{ name : Text; size : Nat; fileType : Text; owner : Principal; employeeId : Text }] {
+    let userFiles = await getFiles();
+    Array.filter(userFiles, func(file : { name : Text; size : Nat; fileType : Text; owner : Principal; employeeId : Text }) : Bool {
+      file.employeeId == employeeId
+    });
   };
 
   // Return total chunks for a file
