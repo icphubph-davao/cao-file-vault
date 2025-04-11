@@ -2,13 +2,16 @@
 type File =
   {
     chunks : [FileChunk];
-    employeeId : Text;
     fileType : Text;
+    metadata : FileMetadata;
     name : Text;
     owner : Principal;
-    totalSize : Nat
+    totalSize : Nat;
+    uploadDate : Int
   };
 type FileChunk = {chunk : Blob; index : Nat};
+type FileMetadata =
+  {employeeId : Text; extension : Text; formNumber : Text; year : Text};
 type Map<K, V> = [var ?([var ?K], [var ?V], [var Nat], [var Nat32])];
 type Map__12<K, V> = Map<K, V>;
 type UserFiles = Map__12<Text, File>;

@@ -1,0 +1,18 @@
+// Version: 1.0.0
+type File =
+  {
+    chunks : [FileChunk];
+    employeeId : Text;
+    fileType : Text;
+    name : Text;
+    owner : Principal;
+    totalSize : Nat
+  };
+type FileChunk = {chunk : Blob; index : Nat};
+type Map<K, V> = [var ?([var ?K], [var ?V], [var Nat], [var Nat32])];
+type Map__12<K, V> = Map<K, V>;
+type UserFiles = Map__12<Text, File>;
+actor {
+  stable var files :
+    [var ?([var ?Principal], [var ?UserFiles], [var Nat], [var Nat32])]
+};

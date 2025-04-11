@@ -1,4 +1,10 @@
 export const idlFactory = ({ IDL }) => {
+  const FileMetadata = IDL.Record({
+    'formNumber' : IDL.Text,
+    'year' : IDL.Text,
+    'employeeId' : IDL.Text,
+    'extension' : IDL.Text,
+  });
   return IDL.Service({
     'checkFileExists' : IDL.Func([IDL.Text], [IDL.Bool], []),
     'deleteFile' : IDL.Func([IDL.Text], [IDL.Bool], []),
@@ -14,10 +20,11 @@ export const idlFactory = ({ IDL }) => {
           IDL.Vec(
             IDL.Record({
               'owner' : IDL.Principal,
+              'metadata' : FileMetadata,
               'name' : IDL.Text,
               'size' : IDL.Nat,
               'fileType' : IDL.Text,
-              'employeeId' : IDL.Text,
+              'uploadDate' : IDL.Int,
             })
           ),
         ],
@@ -29,10 +36,43 @@ export const idlFactory = ({ IDL }) => {
           IDL.Vec(
             IDL.Record({
               'owner' : IDL.Principal,
+              'metadata' : FileMetadata,
               'name' : IDL.Text,
               'size' : IDL.Nat,
               'fileType' : IDL.Text,
-              'employeeId' : IDL.Text,
+              'uploadDate' : IDL.Int,
+            })
+          ),
+        ],
+        [],
+      ),
+    'getFilesByFormNumber' : IDL.Func(
+        [IDL.Text],
+        [
+          IDL.Vec(
+            IDL.Record({
+              'owner' : IDL.Principal,
+              'metadata' : FileMetadata,
+              'name' : IDL.Text,
+              'size' : IDL.Nat,
+              'fileType' : IDL.Text,
+              'uploadDate' : IDL.Int,
+            })
+          ),
+        ],
+        [],
+      ),
+    'getFilesByYear' : IDL.Func(
+        [IDL.Text],
+        [
+          IDL.Vec(
+            IDL.Record({
+              'owner' : IDL.Principal,
+              'metadata' : FileMetadata,
+              'name' : IDL.Text,
+              'size' : IDL.Nat,
+              'fileType' : IDL.Text,
+              'uploadDate' : IDL.Int,
             })
           ),
         ],

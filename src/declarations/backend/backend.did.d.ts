@@ -2,6 +2,12 @@ import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
 import type { IDL } from '@dfinity/candid';
 
+export interface FileMetadata {
+  'formNumber' : string,
+  'year' : string,
+  'employeeId' : string,
+  'extension' : string,
+}
 export interface _SERVICE {
   'checkFileExists' : ActorMethod<[string], boolean>,
   'deleteFile' : ActorMethod<[string], boolean>,
@@ -12,10 +18,11 @@ export interface _SERVICE {
     Array<
       {
         'owner' : Principal,
+        'metadata' : FileMetadata,
         'name' : string,
         'size' : bigint,
         'fileType' : string,
-        'employeeId' : string,
+        'uploadDate' : bigint,
       }
     >
   >,
@@ -24,10 +31,37 @@ export interface _SERVICE {
     Array<
       {
         'owner' : Principal,
+        'metadata' : FileMetadata,
         'name' : string,
         'size' : bigint,
         'fileType' : string,
-        'employeeId' : string,
+        'uploadDate' : bigint,
+      }
+    >
+  >,
+  'getFilesByFormNumber' : ActorMethod<
+    [string],
+    Array<
+      {
+        'owner' : Principal,
+        'metadata' : FileMetadata,
+        'name' : string,
+        'size' : bigint,
+        'fileType' : string,
+        'uploadDate' : bigint,
+      }
+    >
+  >,
+  'getFilesByYear' : ActorMethod<
+    [string],
+    Array<
+      {
+        'owner' : Principal,
+        'metadata' : FileMetadata,
+        'name' : string,
+        'size' : bigint,
+        'fileType' : string,
+        'uploadDate' : bigint,
       }
     >
   >,
